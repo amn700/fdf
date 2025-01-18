@@ -49,6 +49,16 @@ int     allocate_int_matrix(fdf* data)
     return 1;
 }
 
+void    populate_line(fdf *data, char** matrix, int i)
+{
+    int j = 0;
+    while (j < data->width)
+    {
+        data->z_matrix[i][j] = ft_atoi(matrix[j]);
+        j++;
+    }
+}
+
 int     populate_matrix(char* file_name, fdf * data)
 {
     char * line;
@@ -60,19 +70,15 @@ int     populate_matrix(char* file_name, fdf * data)
     int j = 0;
     while (i < data->height)
     {
-        j = 0;
-        while (j < data->width)
-        {
-            line = get_next_line(fd);
-            if (!line)
-                return 1;
-            matrix = ft_split(line, 32);
-            if (!matrix)
-                return 1;
-            free(line);/**/
-            data->z_matrix[i][j] = (ft_atoi(matrix[j]));
-            j++;
-        }
+        line = get_next_line(fd);
+        if (!line)
+            return 1;
+        matrix = ft_split(line, 32);
+        if (!matrix)
+            return 1;
+        free(line);
+        populate_line(data, matrix, i);
+            // data->z_matrix[i][j] = (ft_atoi(matrix[j]));
         free(matrix);
         i++;
     }

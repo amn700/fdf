@@ -15,12 +15,11 @@ void	*mlx_new_window(void *mlx_ptr, int size_x, int size_y, char *title);
 
 typedef struct
 {
-    int width;
-    int height;
-    int **z_matrix;
-
-    void * mlx_ptr;
-    void * win_ptr;
+	int		width;
+	int		height;
+	int		**z_matrix;
+	void	*mlx_ptr;
+	void	*win_ptr;
 }   fdf;
 
 #endif
