@@ -6,7 +6,7 @@
 /*   By: mohchaib <mohchaib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/30 16:58:55 by marvin            #+#    #+#             */
-/*   Updated: 2024/12/22 05:50:06 by mohchaib         ###   ########.fr       */
+/*   Updated: 2025/01/20 09:37:13 by mohchaib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ char	*ft_read_and_append(int fd, char *st_buffer, char *buffer)
 		if (temp == NULL)
 			return (NULL);
 		st_buffer = temp;
-		if (ft_strchr(st_buffer, '\n') != -1)
+		if (ft_strchr_get(st_buffer, '\n') != -1)
 			break ;
 	}
 	return (st_buffer);
@@ -99,7 +99,9 @@ char	*get_next_line(int fd)
 	char		*line;
 
 	line = NULL;
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
+	if (fd < 0)
+		return NULL;
+	if (BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
 		return (free(st_buffer), st_buffer = NULL, NULL);
 	buffer = malloc(BUFFER_SIZE + 1);
 	if (!buffer)

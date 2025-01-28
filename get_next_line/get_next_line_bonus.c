@@ -6,7 +6,7 @@
 /*   By: mohchaib <mohchaib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/30 16:58:55 by marvin            #+#    #+#             */
-/*   Updated: 2024/12/22 05:50:02 by mohchaib         ###   ########.fr       */
+/*   Updated: 2025/01/19 22:23:23 by mohchaib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ char	*ft_read_and_append(int fd, char *st_buffer, char *buffer)
 		if (temp == NULL)
 			return (NULL);
 		st_buffer = temp;
-		if (ft_strchr(st_buffer, '\n') != -1)
+		if (ft_strchr_get(st_buffer, '\n') != -1)
 			break ;
 	}
 	return (st_buffer);

@@ -6,7 +6,7 @@
 /*   By: mohchaib <mohchaib@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/30 18:08:12 by marvin            #+#    #+#             */
-/*   Updated: 2024/12/22 05:46:46 by mohchaib         ###   ########.fr       */
+/*   Updated: 2025/01/19 21:15:00 by mohchaib         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (copy(new, (char *)s1, (char *)s2));
 }
 
-int	ft_strchr(const char *s, int c)
+int	ft_strchr_get(const char *s, int c)
 {
 	int	i;
 
