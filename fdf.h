@@ -10,33 +10,54 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <math.h>
 
-#define WIDTH 800
-#define HEIGHT 600
+// #define WIDTH 1920
+// #define HEIGHT 1080
+#define WIDTH 500
+#define HEIGHT 500
 
-typedef struct s_fdf
-{
-	mlx_t	*mlx_ptr;
-	int		width;
-	int		height;
-}   t_fdf;
+//uint32_t is just a fking unsigned int
+typedef struct s_dims{
+	uint32_t	x;
+	uint32_t	y;
+}	t_dims;
 
-typedef struct{
-    int z;
-    char *color;
-}t_point;
+typedef struct s_isom{
+	double cos;
+	double sin;
+}	t_isom;
 
-typedef struct {
-    t_point *map;
-    int max_x;
-}t_line;
+typedef struct s_offset{
+	int x;
+	int y;
+}	t_offset;
 
+typedef struct s_point{
+	int		z;
+	int		color;
+}	t_point;
+
+typedef struct s_line{
+	t_point		*line;
+	uint32_t	max_x;
+}	t_line;
+
+typedef struct s_fdf{
+	uint32_t		width;
+	uint32_t		height;
+	mlx_t			*mlx_ptr;
+	t_line			*map;
+}	t_fdf;
+
+int	check_extention(char * file_name);
+int		ft_atoi_fdf(const char *nptr, int *i);
+int		get_color(char *point, int i);
 void	init_struct_fdf(t_fdf* data);
 int		check_map(int width, char *line);
 int		count_words(char *str);
-char	*get_color(char *point);
 int		populate_every_point(t_fdf data, t_line *array, char *file_name);
-int allocate_points(t_line *array, t_fdf data);
+int		allocate_points(t_fdf *data);
 int		get_width_and_height(char* file_name, t_fdf* data);
 int		count_words(char *str);
 int		set_max_x_values(char *file_name, t_line *array);

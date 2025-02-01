@@ -1,19 +1,20 @@
 #include "fdf.h"
 
-// void	free_matrix_fdf(int **matrix)
-// {
-// 	int i = 0;
-// 	while (matrix[i])
-// 		free(matrix[i++]);
-// 	free(matrix);
-// }
-int check_extention(char * file_name)
+void	free_matrix_fdf(int **matrix)
+{
+	int i = 0;
+	while (matrix[i])
+		free(matrix[i++]);
+	free(matrix);
+}
+
+int	check_extention(char * file_name)
 {
 	size_t len = ft_strlen(file_name) - 4;
 	file_name += len;
 	if (!ft_strncmp(file_name, ".fdf", 4))
-		return 1;
-	return 0;
+		return (1);
+	return (0);
 }
 
 int	set_max_x_values(char *file_name, t_line *array)
@@ -33,70 +34,143 @@ int	set_max_x_values(char *file_name, t_line *array)
 	close(fd);
 	return (1);
 }
+static void	abort_free(t_fdf *data, int y)
+{
+	while (y >= 0)
+	{
+		free(data->map[y].line);
+		y--;
+	}
+}
 
-int allocate_points(t_line *array, t_fdf data)
+int	allocate_points(t_fdf *data)
 {
 	int y = 0;
-	while (y < data.height)
+	while (y < data->height)
 	{
-		array[y].map = calloc(sizeof(t_point) , array[y].max_x);
-		if (!array[y].map)
-			return (0);
+		data->map[y].line = calloc(sizeof(t_point) , data->map[y].max_x);
+		if (!data->map[y].line)
+			return (abort_free(data, y), 0);
 		y++;
 	}
 	return (1);
 }
 
+static void core_populate(t_line *array, char *line, int y)
+{
+	char	**matrix;
+	int		x;
+	int		i;
+
+	x = 0;
+	i = 0;
+	matrix = ft_split(line, 32);
+	if (!matrix)
+		return ;
+	while (x < array[y].max_x)
+	{
+		i = 0;
+		array[y].line[x].z = ft_atoi_fdf(matrix[x], &i);
+		array[y].line[x].color = get_color(matrix[x], i);
+		x++;
+	}
+	free(matrix);
+}
+
 int	populate_every_point(t_fdf data, t_line *array, char *file_name)
 {
-	int x = 0;
-	int y = 0;
-	char *line;
-	char **matrix;
+	char 	*line;
+	int		y ;
 
+	y = 0;
 	int fd = open (file_name, O_RDONLY);
 	if (fd < 0)
-		return 0;
+		return (0);
 	while (y < data.height)
 	{
-		x = 0;
 		line = get_next_line(fd);
-			if (!line)
-				break;
-		matrix = ft_split(line, 32);
-		if (!matrix)
-			return 0;
-		while (x < array[y].max_x)
-		{
-			// ft_printf("|%i|",array[y].max_x);
-			// ft_printf("|%s|",line);
-			array[y].map[x].z = ft_atoi(matrix[x]);
-			// ft_printf("(%i |",array[y].map[x].z);
-			array[y].map[x].color = get_color(matrix[x]);
-			// ft_printf("%s)",array[y].map->color);
-			x++;
-		}
+		if (!line)
+			break;
+		core_populate(array, line, y);
 		free(line);
-		free(matrix);
 		y++;
 	}
-	return 1;
+	return (1);
 }
 
-char	*get_color(char *point)
+int	ft_atoi_fdf(const char *nptr, int *i)
 {
-	int i = 0;
-	while (point[i])
+	int		sign;
+	int		total;
+
+	sign = 1;
+	total = 0;
+	while (nptr[*i] == 32 || (nptr[*i] >= 9 && nptr[*i] <= 13))
+		(*i)++;
+	if (nptr[*i] == '-' || nptr[*i] == '+')
 	{
-		if (point[i] == ',')
-			return (ft_strdup(&point[++i]));
-			// ft_printf("%s\n", &point[i]);
+		if (nptr[*i] == '-')
+			sign = -1;
+		(*i)++;
+	}
+	while (nptr[*i] >= '0' && nptr[*i] <= '9')
+	{
+		total = total * 10 + (nptr[*i] - '0');
+		(*i)++;
+	}
+	return (total * sign);
+}
+
+int	locate(const char *s, int c)
+{
+	int	i;
+
+	i = 0;
+	while (s[i])
+	{
+		if (s[i] == (char)c)
+			return (i);
 		i++;
 	}
-	return NULL;
+	return (-1);
 }
 
-int		count_words(char *str)
+int single_color(char *point, int *i, int *color)
+{
+	char *base = "0123456789ABCDEF";
+	*color = 0;
+
+	if (locate(base, point[(*i)]) == -1 || locate(base, point[(*i)+ 1]) == -1)
+		return (0);
+	*(color) = locate(base, point[(*i)] * 16 + locate(base, point[(*i)+1]));
+	*(i) += 2;
+	return (1);
+}
+
+int	get_color(char *point, int i)
+{
+	int		place;
+	int		color;
+	int		full_rgb;
+
+	place = 0;
+    full_rgb = 0;
+	if (ft_strlen(&point[i]) != 9)
+		return (0);
+	if (ft_strncmp(&point[i],",0x", 3))
+		return (0);
+	i += 3;
+	while (place < 3)
+	{
+		if (!single_color(point, &i, &color))
+			return (0);
+		full_rgb = full_rgb << 8 | color;
+		place++;
+	}
+	return (full_rgb);
+}
+
+int	count_words(char *str)
 {
 	int	i;
 	int	count;
@@ -115,18 +189,15 @@ int		count_words(char *str)
 	return (count);
 }
 
-int		check_map(int width, char *line)
+int	check_map(int width, char *line)
 {
 	int count = count_words(line);
 	if (count < width)
-	{
-		// ft_printf("%i || %i \n", count, width);
 		return (ft_printf("Found wrong line length. Exiting."), 0);
-	}
 	return 1;
 }
 
-int		get_width_and_height(char* file_name, t_fdf* data)
+int	get_width_and_height(char* file_name, t_fdf* data)
 {
 	int count = 0;
 	int fd = open (file_name, O_RDONLY);
@@ -136,7 +207,6 @@ int		get_width_and_height(char* file_name, t_fdf* data)
 	if (!line)
 		return (close(fd), (0));
 	count++;
-	// ft_printf("%s", line);
 	data->width = count_words(line);
 	free(line);
 	while (1)
@@ -158,6 +228,7 @@ void	init_struct_fdf(t_fdf* data)
 {
 	data->height = 0;
 	data->width = 0;
+	data->map = NULL;
 	data->mlx_ptr = NULL;
 }
 
