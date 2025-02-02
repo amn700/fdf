@@ -14,14 +14,18 @@
 
 // #define WIDTH 1920
 // #define HEIGHT 1080
-#define WIDTH 500
+#define WIDTH 1000
 #define HEIGHT 500
 
-//uint32_t is just a fking unsigned int
 typedef struct s_dims{
 	uint32_t	x;
 	uint32_t	y;
 }	t_dims;
+
+typedef struct s_screen {
+    double x;
+    double y;
+} t_screen;
 
 typedef struct s_isom{
 	double cos;
@@ -33,10 +37,11 @@ typedef struct s_offset{
 	int y;
 }	t_offset;
 
-typedef struct s_point{
-	int		z;
-	int		color;
-}	t_point;
+typedef struct s_point {
+    int z;
+    int color;
+	t_dims *final;
+} t_point;
 
 typedef struct s_line{
 	t_point		*line;
