@@ -43,62 +43,147 @@ t_isom set_isom(int angle)
 
 int	set_scalefactor(t_fdf *data, mlx_image_t *img)
 {
-	int	scale_x;
-	int	scale_y;
-	int	largest_width;
+	double	scale_x;
+	double	scale_y;
+	double	largest_width;
 
-	largest_width = get_largest_width(data);
+	largest_width = (double)get_largest_width(data);
 	scale_x = img->width / largest_width;
-	scale_y = img->height / data->height;
+	scale_x = round(img->width / largest_width);
+	scale_y = round(img->height / data->height);
+
 	if (scale_x < scale_y)
-		return (scale_x);
+		return ((int)scale_x);
 	else
-		return (scale_y);	
+		return ((int)scale_y);
 }
 
-t_offset set_offset(t_fdf *data, mlx_image_t *img, int scale_factor)
+t_dims set_offset(t_fdf *data, mlx_image_t *img, int scale_factor)
 {
-	int offset_x;
-    int offset_y;
+    u_int32_t offset_x;
+    u_int32_t offset_y;
 
-	offset_x = (img->width - (get_largest_width(data) * scale_factor)) / 2;
-    offset_y = (img->height - (data->height * scale_factor)) / 2;
-	return ((t_offset){offset_x, offset_y});
+    offset_x = (u_int32_t)round(img->width - (get_largest_width(data) * scale_factor)) / 2;
+    offset_y = (u_int32_t)round(img->height - (data->height * scale_factor)) / 2;
+
+    return ((t_dims){offset_x, offset_y});
 }
-
 
 void render_map(t_fdf *data, mlx_image_t *img)
 {
-	t_dims 		final;
-	t_dims		dims;
-	t_dims		screen;
-	t_offset	offset;
-	t_isom		calcule;
-	int			scale_factor;
-	int			scale_z;
+    t_dims dims;
+    t_dims final;
+    t_screen screen;
+    t_dims offset;
+    t_isom calcule;
+    int scale_factor;
+
+    calcule = set_isom(30);
+
+    scale_factor = set_scalefactor(data, img);
+    offset = set_offset(data, img, scale_factor);
 
     dims.y = 0;
-	calcule = set_isom(30);
-    scale_factor = set_scalefactor(data, img);
-	offset = set_offset(data, img, scale_factor);
-    while (dims.y < data->height)
-	{
+    while (dims.y < data->height) {
         dims.x = 0;
-		// scale_z = data->map[dims.y].line[dims.x].z * scale_factor / 10;//min z , maz z gets u the devison
-		// screen.y = (dims.x + dims.y) * calcule.sin - scale_z;
         while (dims.x < data->map[dims.y].max_x)
 		{
-			screen.y = (dims.x + dims.y) * calcule.sin - data->map[dims.y].line[dims.x].z;
             screen.x = (dims.x - dims.y) * calcule.cos;
-            final.x =  ((offset.x +screen.x) * scale_factor);
-			final.y =  ((offset.y +screen.y) * scale_factor);
+            screen.y = (dims.x + dims.y) * calcule.sin - data->map[dims.y].line[dims.x].z;
+
+            final.x = offset.x + ((screen.x) * (scale_factor/2));
+            final.y = offset.y + ((screen.y) * (scale_factor/2));
+
             if (final.x >= 0 && final.x < img->width && final.y >= 0 && final.y < img->height)
-            	mlx_put_pixel(img, final.x, final.y, data->map[dims.y].line[dims.x].color);
+                mlx_put_pixel(img, final.x, final.y, -1);
+
             dims.x++;
         }
         dims.y++;
     }
 }
+
+            // // Draw lines to adjacent points
+            // if (dims.x > 0)
+			// {
+            //     // Draw line to the left neighbor
+            //     int left_x = data->map[dims.y].line[dims.x - 1].final->x;
+            //     int left_y = data->map[dims.y].line[dims.x - 1].final->y;
+            //     draw_line(img, final_x, final_y, left_x, left_y, data->map[dims.y].line[dims.x].color);
+            // }
+            // if (dims.y > 0 && dims.x < data->map[dims.y - 1].max_x)
+			// {
+            //     // Draw line to the top neighbor
+            //     int top_x = data->map[dims.y - 1].line[dims.x].final->x;
+            //     int top_y = data->map[dims.y - 1].line[dims.x].final->y;
+            //     draw_line(img, final_x, final_y, top_x, top_y, data->map[dims.y].line[dims.x].color);
+            // }
+
+// void render_map(t_fdf *data, mlx_image_t *img)
+// {
+// 	t_dims		dims;
+// 	t_dims		screen;
+// 	t_offset	offset;
+// 	t_isom		calcule;
+// 	int			scale_factor;
+// 	int			scale_z;
+
+//     dims.y = 0;
+// 	calcule = set_isom(30);
+//     scale_factor = set_scalefactor(data, img);
+// 	offset = set_offset(data, img, scale_factor);
+//     while (dims.y < data->height)
+// 	{
+//         dims.x = 0;
+//         while (dims.x < data->map[dims.y].max_x)
+// 		{
+// 			scale_z = data->map[dims.y].line[dims.x].z * scale_factor / 10;//min z , maz z gets u the devison
+// 			screen.y = (dims.x + dims.y) * calcule.sin - scale_z;
+// 			screen.y = ((dims.x + dims.y) * calcule.sin )- scale_z;
+//             screen.x = (dims.x - dims.y) * calcule.cos;
+//             final.x =  offset.x + ((screen.x) * scale_factor);
+// 			final.y =  offset.y + ((screen.y) * scale_factor);
+//             if (final.x >= 0 && final.x < img->width && final.y >= 0 && final.y < img->height)
+//             	mlx_put_pixel(img, final.x, final.y, -1);
+//             	// mlx_put_pixel(img, dims.x, dims.y, data->map[dims.y].line[dims.x].color);
+//             	// mlx_put_pixel(img, screen.x, screen.y, data->map[dims.y].line[dims.x].color);
+//             dims.x++;
+//         }
+//         dims.y++;
+//     }
+// }
+// void render_map(t_fdf *data, mlx_image_t *img)
+// {
+// 	t_dims 		final;
+// 	t_dims		dims;
+// 	t_dims		screen;
+// 	t_offset	offset;
+// 	t_isom		calcule;
+// 	int			scale_factor;
+// 	int			scale_z;
+
+//     dims.y = 0;
+// 	calcule = set_isom(30);
+//     scale_factor = set_scalefactor(data, img);
+// 	offset = set_offset(data, img, scale_factor);
+//     while (dims.y < data->height)
+// 	{
+//         dims.x = 0;
+// 		// scale_z = data->map[dims.y].line[dims.x].z * scale_factor / 10;//min z , maz z gets u the devison
+// 		// screen.y = (dims.x + dims.y) * calcule.sin - scale_z;
+//         while (dims.x < data->map[dims.y].max_x)
+// 		{
+// 			screen.y = (dims.x + dims.y) * calcule.sin - data->map[dims.y].line[dims.x].z;
+//             screen.x = (dims.x - dims.y) * calcule.cos;
+//             final.x =  ((offset.x +screen.x) * scale_factor);
+// 			final.y =  ((offset.y +screen.y) * scale_factor);
+//             if (final.x >= 0 && final.x < img->width && final.y >= 0 && final.y < img->height)
+//             	mlx_put_pixel(img, final.x, final.y, data->map[dims.y].line[dims.x].color);
+//             dims.x++;
+//         }
+//         dims.y++;
+//     }
+// }
 
 int	main(int argc, char** argv)
 {
@@ -126,7 +211,7 @@ int	main(int argc, char** argv)
 	mlx_image_t* img = mlx_new_image(data.mlx_ptr, WIDTH, HEIGHT);
 	if (!img)
 		return 1;
-	ft_memset(img->pixels, 255, img->width * img->height * sizeof(int32_t));
+	// ft_memset(img->pixels, 255, img->width * img->height * sizeof(int32_t));
 	if (mlx_image_to_window(data.mlx_ptr, img, 0, 0) < 0)
 		return 1;
 	render_map(&data, img);
@@ -201,7 +286,8 @@ int	main(int argc, char** argv)
 	// mlx_close_window(data->mlx_ptr);
 	// mlx_terminate(data->mlx_ptr);
 	// return (EXIT_SUCCESS);
-// 	void draw_line(mlx_image_t *img, int x0, int y0, int x1, int y1, uint32_t color) {
+// 	void draw_line(mlx_image_t *img, int x0, int y0, int x1, int y1, uint32_t color)
+// {
 //     int dx = abs(x1 - x0);
 //     int dy = abs(y1 - y0);
 //     int sx = (x0 < x1) ? 1 : -1;
