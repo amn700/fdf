@@ -1,3 +1,5 @@
 destination.x = source.x * cos(a) + source.y * cos(a+2) + source.z * cos(a-2)
 destination.y = source.x * sin(a) + source.y * sin(a+2) + source.z * sin(a-2)
 https://42-cursus.gitbook.io/guide/rank-02/fdf/understand-fdf
+screen.x = dims.x * cos(angle) + dims.y * cos(angle+2) +  data->map[dims.y].line[dims.x].z * cos(angle-2);
+screen.y = dims.x * sin(angle) + dims.y * sin(angle+2) +  data->map[dims.y].line[dims.x].z * sin(angle-2);
