@@ -45,7 +45,7 @@ static void	abort_free(t_fdf *data, int y)
 
 int	allocate_points(t_fdf *data)
 {
-	int y = 0;
+	uint32_t y = 0;
 	while (y < data->height)
 	{
 		data->map[y].line = calloc(sizeof(t_point) , data->map[y].max_x);
@@ -59,7 +59,7 @@ int	allocate_points(t_fdf *data)
 static void core_populate(t_line *array, char *line, int y)
 {
 	char	**matrix;
-	int		x;
+	uint32_t		x;
 	int		i;
 
 	x = 0;
@@ -80,7 +80,7 @@ static void core_populate(t_line *array, char *line, int y)
 int	populate_every_point(t_fdf data, t_line *array, char *file_name)
 {
 	char 	*line;
-	int		y ;
+	uint32_t		y ;
 
 	y = 0;
 	int fd = open (file_name, O_RDONLY);

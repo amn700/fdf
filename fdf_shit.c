@@ -1,5 +1,9 @@
 #include "fdf.h"
 
+double to_radians(int degrees)
+{
+    return degrees * M_PI / 180.0;
+}
 void free_fdf_map(t_fdf *data)
 {
 	uint32_t y = 0;
@@ -24,11 +28,6 @@ uint32_t get_largest_width(t_fdf *data)
 	return (max);
 }
 
-double to_radians(int degrees)
-{
-    return degrees * M_PI / 180.0;
-}
-
 t_isom set_isom(int angle)
 {
 	double		sin_angle;
@@ -40,6 +39,7 @@ t_isom set_isom(int angle)
     cos_angle = cos(rad);
 	return ((t_isom){cos_angle, sin_angle});
 }
+
 
 int	set_scalefactor(t_fdf *data, mlx_image_t *img)
 {
@@ -72,35 +72,132 @@ t_dims set_offset(t_fdf *data, mlx_image_t *img, int scale_factor)
 void render_map(t_fdf *data, mlx_image_t *img)
 {
     t_dims dims;
-    t_dims final;
     t_screen screen;
     t_dims offset;
-    t_isom calcule;
+    // t_isom calcule;
     int scale_factor;
 
-    calcule = set_isom(30);
-
+    // calcule = set_isom(30);
+	// double rad = to_radians(45);
     scale_factor = set_scalefactor(data, img);
     offset = set_offset(data, img, scale_factor);
 
     dims.y = 0;
-    while (dims.y < data->height) {
+    while (dims.y < data->height)
+	{
         dims.x = 0;
         while (dims.x < data->map[dims.y].max_x)
 		{
-            screen.x = (dims.x - dims.y) * calcule.cos;
-            screen.y = (dims.x + dims.y) * calcule.sin - data->map[dims.y].line[dims.x].z;
-
-            final.x = offset.x + ((screen.x) * (scale_factor/2));
-            final.y = offset.y + ((screen.y) * (scale_factor/2));
-
-            if (final.x >= 0 && final.x < img->width && final.y >= 0 && final.y < img->height)
-                mlx_put_pixel(img, final.x, final.y, -1);
+			screen.x = (/* (float)*/dims.x -/*  (float)*/dims.y) * cos(to_radians(30));
+			screen.y = (/* (float)*/dims.x + /* (float)*/dims.y) * sin(to_radians(30)) - data->map[dims.y].line[dims.x].z;	
+			// screen.x = (float)dims.x * cos(to_radians(30)) +(float) dims.y * cos(to_radians(30+2)) + data->map[dims.y].line[dims.x].z * cos(to_radians(30-2));
+			// screen.y = (float)dims.x * sin(to_radians(30)) +(float) dims.y * sin(to_radians(30+2)) + data->map[dims.y].line[dims.x].z * sin(to_radians(30-2));
+			data->map[dims.y].line[dims.x].final.x = offset.x + ((screen.x) * (scale_factor / 2));
+			data->map[dims.y].line[dims.x].final.y = offset.y + ((screen.y) * (scale_factor / 2));
 
             dims.x++;
         }
         dims.y++;
     }
+}
+
+void draw_line(t_screen one, t_screen two, mlx_image_t *img)
+{
+	t_screen 	d;
+	t_screen 	screen;
+	float 		step;
+	float 		i;
+
+	screen.x = one.x;
+	screen.y = one.y;
+	d.x = fabs(two.x - one.x);
+	d.y = fabs(two.y - one.y);
+	step = ((d.x >= d.y) ? d.x : d.y);
+	// d.x = fabs(two.x - one.x) / step;
+    // d.y = fabs(two.y - one.y) / step;
+	d.x = d.x / step;
+	d.y = d.y / step;
+	i = 1;
+	while (i < step)
+	{
+		if (screen.x >= (float)0 && screen.y >= (float)0 && screen.x < (float)img->width && screen.y < (float)img->height)
+			mlx_put_pixel(img, screen.x, screen.y, -1);
+		screen.x = screen.x + d.x;
+		screen.y = screen.y + d.y;
+		i++;
+	}
+}
+
+void connect_dots(t_fdf *data, mlx_image_t* img)
+{
+	t_dims cords;
+	t_screen begin;
+	t_screen end;
+	cords.y = 0;
+	while (cords.y < data->height)
+	{
+		cords.x = 0;
+		while (cords.x < data->map[cords.y].max_x)
+		{
+			begin = data->map[cords.y].line[cords.x].final;
+			end = data->map[cords.y].line[cords.x + 1].final;
+			draw_line(begin, end, img);
+			cords.x++;
+		}
+		cords.y++;
+	}
+}
+
+int	main(int argc, char** argv)
+{
+	if (argc != 2)
+		return (write(2, "error0\n\n", 7), 1);
+	t_fdf data;
+	init_struct_fdf(&data);
+	if(!check_extention(argv[1]))
+		return (1);
+	if (!get_width_and_height(argv[1], &data))
+		return (write(2, "error1\n", 7), 1);
+	data.map = malloc (sizeof(t_line) * data.height);
+	if (!data.map)
+		return (1);
+	if (!set_max_x_values(argv[1], data.map))
+		return (write(2, "error2\n", 7),free(data.map), 1);
+	if (!allocate_points(&data))
+		return (write(2, "error3\n", 7),free(data.map), 1);
+	if (!populate_every_point(data, data.map, argv[1]))
+		return (write(2, "error4\n", 7),free_fdf_map(&data), 1);
+	data.mlx_ptr = mlx_init(WIDTH, HEIGHT, "fdf", false);
+	if (!data.mlx_ptr)
+		return (write(2, "error5\n", 7),free_fdf_map(&data), 1);
+	
+	mlx_image_t* img = mlx_new_image(data.mlx_ptr, WIDTH, HEIGHT);
+	if (!img)
+		return 1;
+	// ft_memset(img->pixels, 255, img->width * img->height * sizeof(int32_t));
+	if (mlx_image_to_window(data.mlx_ptr, img, 0, 0) < 0)
+		return 1;
+	render_map(&data, img);
+	printf("|%f|", (double)data.height);
+	printf("|%f|\n", (double)data.map[0].max_x);
+	printf("|%f|\n", (double)data.map[1].max_x);
+	printf("|%f|\n", (double)data.map[2].max_x);
+	for(int y = 0; (double)y < data.height; y++)
+	{
+		for(int x = 0; (double)x < data.map[y].max_x; x++)
+		{
+			// printf("|%f|", (double)y);
+			// printf("|%f|", (double)x);
+			// printf("|%f|\n",(double)data.map[y].line[x].z);
+
+			// ft_printf("{%f}", data.height);
+			// ft_printf("{%f}\n", data.map[y].max_x);
+		}
+	}
+	connect_dots(&data, img);
+	// draw_line((t_screen){0,0}, (t_screen){WIDTH, HEIGHT}, img);
+	mlx_loop(data.mlx_ptr);
+	return (0);
 }
 
             // // Draw lines to adjacent points
@@ -184,79 +281,6 @@ void render_map(t_fdf *data, mlx_image_t *img)
 //         dims.y++;
 //     }
 // }
-
-int	main(int argc, char** argv)
-{
-	if (argc != 2)
-		return (write(2, "error0\n\n", 7), 1);
-	t_fdf data;
-	init_struct_fdf(&data);
-	if(!check_extention(argv[1]))
-		return (1);
-	if (!get_width_and_height(argv[1], &data))
-		return (write(2, "error1\n", 7), 1);
-	data.map = malloc (sizeof(t_line) * data.height);
-	if (!data.map)
-		return (1);
-	if (!set_max_x_values(argv[1], data.map))
-		return (write(2, "error2\n", 7),free(data.map), 1);
-	if (!allocate_points(&data))
-		return (write(2, "error3\n", 7),free(data.map), 1);
-	if (!populate_every_point(data, data.map, argv[1]))
-		return (write(2, "error4\n", 7),free_fdf_map(&data), 1);
-	data.mlx_ptr = mlx_init(WIDTH, HEIGHT, "fdf", false);
-	if (!data.mlx_ptr)
-		return (write(2, "error5\n", 7),free_fdf_map(&data), 1);
-	
-	mlx_image_t* img = mlx_new_image(data.mlx_ptr, WIDTH, HEIGHT);
-	if (!img)
-		return 1;
-	// ft_memset(img->pixels, 255, img->width * img->height * sizeof(int32_t));
-	if (mlx_image_to_window(data.mlx_ptr, img, 0, 0) < 0)
-		return 1;
-	render_map(&data, img);
-	// int largest_width = get_largest_width(&data);
-	// int scale_x = img->width / largest_width;
-	// int scale_y = img->height / data.height;
-
-	// int scale_factor;
-	// if (scale_x < scale_y)
-	// 	scale_factor = scale_x ;
-	// else
-	// 	scale_factor = scale_y;
-	// int y;
-	// int x;
-	// int screen_x;
-	// int screen_y;
-	// int angle;
-	// y = 0;
-	// x = 0;
-	// angle = 20;
-	// // int offset_y = 0;
-	// // int offset_x = 0;
-	// int offset_y = (img->height - (data.height * scale_factor)) / 2;
-	// int offset_x = (img->width - (largest_width * scale_factor)) / 2;
-	// // printf("%i\n", offset_x);
-	// // printf("%i\n", offset_y);
-	// while (y < data.height)
-	// {
-	// 	x = 0;
-	// 	screen_y = (x + y) * sin(angle) - data.map[y].line[x].z;
-	// 	while (x < data.map[y].max_x)
-	// 	{
-	// 		screen_x = (x - y) * cos(angle);
-	// 		mlx_put_pixel(img,  (offset_x + screen_x)*(scale_factor),  (offset_y + screen_y)*(scale_factor), data.map[y].line[x].color);
-	// 		x++;
-	// 	}
-	// 	y++;
-	// }
- 	// y' = (x + y) * sin(angle) - z;
-	// x' = (x - y) * cos(angle);
-
-	mlx_loop(data.mlx_ptr);
-	return (0);
-}
-
 	// for(int y = 0; y < data.height; y++)
 	// {
 	// 	for(int x = 0; x < data.map[y].max_x; x++)

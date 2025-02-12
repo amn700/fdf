@@ -12,10 +12,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-// #define WIDTH 1920
-// #define HEIGHT 1080
-#define WIDTH 1000
-#define HEIGHT 500
+#define WIDTH 1920
+#define HEIGHT 1080
+// #define WIDTH 1000
+// #define HEIGHT 500
 
 typedef struct s_dims{
 	uint32_t	x;
@@ -40,7 +40,7 @@ typedef struct s_offset{
 typedef struct s_point {
     int z;
     int color;
-	t_dims *final;
+	t_screen final;
 } t_point;
 
 typedef struct s_line{

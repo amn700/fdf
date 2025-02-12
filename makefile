@@ -1,7 +1,7 @@
 CC = cc
 CFLAGS = -Wall -Wextra -Werror
 MLX_FLAGS = -framework Cocoa -framework OpenGL -framework IOKit
-SRCS = fdf.c parse_map.c get_next_line/get_next_line_bonus.c get_next_line/get_next_line_utils_bonus.c
+SRCS = fdf_shit.c parse_map.c get_next_line/get_next_line_bonus.c get_next_line/get_next_line_utils_bonus.c
 OBJS = $(SRCS:.c=.o)
 NAME = fdf
 LIBFT_DIR = ./libft
