@@ -177,11 +177,11 @@ int	main(int argc, char** argv)
 	// ft_memset(img->pixels, 255, img->width * img->height * sizeof(int32_t));
 	if (mlx_image_to_window(data.mlx_ptr, img, 0, 0) < 0)
 		return 1;
-	render_map(&data, img);
-	printf("|%f|", (double)data.height);
-	printf("|%f|\n", (double)data.map[0].max_x);
-	printf("|%f|\n", (double)data.map[1].max_x);
-	printf("|%f|\n", (double)data.map[2].max_x);
+	// render_map(&data, img);
+	// printf("|%f|", (double)data.height);
+	// printf("|%f|\n", (double)data.map[0].max_x);
+	// printf("|%f|\n", (double)data.map[1].max_x);
+	// printf("|%f|\n", (double)data.map[2].max_x);
 	for(int y = 0; (double)y < data.height; y++)
 	{
 		for(int x = 0; (double)x < data.map[y].max_x; x++)
@@ -194,6 +194,7 @@ int	main(int argc, char** argv)
 			// ft_printf("{%f}\n", data.map[y].max_x);
 		}
 	}
+	draw_line((t_screen){10, 10}, (t_screen){50, 50}, img);
 	connect_dots(&data, img);
 	// draw_line((t_screen){0,0}, (t_screen){WIDTH, HEIGHT}, img);
 	mlx_loop(data.mlx_ptr);
